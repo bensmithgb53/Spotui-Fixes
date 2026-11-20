@@ -7,6 +7,8 @@ import android.webkit.CookieManager
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -168,6 +170,13 @@ fun SpotifyLoginScreen(navController: NavController) {
                     // "Oops" / "Incorrect email or password" error. Apply it explicitly because
                     // another WebView in the process may have changed its global defaults.
                     settings.userAgentString = WebSettings.getDefaultUserAgent(ctx)
+                    // Android WebView normally adds X-Requested-With with the app package name.
+                    // Spotify account pages can reject that embedded-app marker with the generic
+                    // "Oops" error. Remove it where the installed WebView supports the AndroidX
+                    // compatibility API; this does not alter the login credentials or cookies.
+                    if (WebViewFeature.isFeatureSupported(WebViewFeature.REQUESTED_WITH_HEADER_ALLOW_LIST)) {
+                        WebSettingsCompat.setRequestedWithHeaderOriginAllowList(settings, emptySet())
+                    }
 
                     webViewClient = object : WebViewClient() {
                         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
