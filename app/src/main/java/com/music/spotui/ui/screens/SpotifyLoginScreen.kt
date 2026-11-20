@@ -148,8 +148,6 @@ fun SpotifyLoginScreen(navController: NavController) {
             factory = { ctx ->
                 val cookieManager = CookieManager.getInstance()
                 cookieManager.setAcceptCookie(true)
-                cookieManager.removeAllCookies(null)
-                cookieManager.flush()
 
                 WebView(ctx).apply {
                     webViewRef = this
@@ -190,7 +188,13 @@ fun SpotifyLoginScreen(navController: NavController) {
                             view?.let(::fixSpotifyLoginLayout)
                         }
                     }
-                    loadUrl(SpotifyAuth.LOGIN_URL)
+                    // removeAllCookies is asynchronous. Starting Spotify before its callback
+                    // completes can mix old and new auth cookies during the redirect chain and
+                    // produces Spotify's generic "Oops" page. Wait for the clear to finish.
+                    cookieManager.removeAllCookies {
+                        cookieManager.flush()
+                        post { loadUrl(SpotifyAuth.LOGIN_URL) }
+                    }
                 }
             },
         )
