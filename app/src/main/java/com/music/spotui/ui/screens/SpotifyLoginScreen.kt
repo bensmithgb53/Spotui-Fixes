@@ -167,7 +167,7 @@ fun SpotifyLoginScreen(navController: NavController) {
                     // desktop UA on a phone trips Spotify's bot check and can return the generic
                     // "Oops" / "Incorrect email or password" error. Apply it explicitly because
                     // another WebView in the process may have changed its global defaults.
-                    userAgentString = WebSettings.getDefaultUserAgent(ctx)
+                    settings.userAgentString = WebSettings.getDefaultUserAgent(ctx)
 
                     webViewClient = object : WebViewClient() {
                         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
