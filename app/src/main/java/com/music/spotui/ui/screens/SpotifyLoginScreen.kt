@@ -70,9 +70,6 @@ import org.json.JSONObject
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 
-private const val USER_AGENT_DESKTOP =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
-
 private const val SPOTIFY_GREEN = 0xFF1ED760
 
 /**
@@ -166,13 +163,18 @@ fun SpotifyLoginScreen(navController: NavController) {
                     settings.useWideViewPort = true
                     settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
                     settings.javaScriptCanOpenWindowsAutomatically = true
-                    // Keep the WebView's REAL (mobile Chrome) User-Agent for login —
-                    // a spoofed desktop UA on a phone trips Spotify's reCAPTCHA bot
-                    // check and it wrongly returns "Incorrect email or password".
+                    // Spotify account pages need the real Android WebView identity. A spoofed
+                    // desktop UA on a phone trips Spotify's bot check and can return the generic
+                    // "Oops" / "Incorrect email or password" error. Apply it explicitly because
+                    // another WebView in the process may have changed its global defaults.
+                    userAgentString = WebSettings.getDefaultUserAgent(ctx)
 
                     webViewClient = object : WebViewClient() {
                         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                             pageReady.set(false)
+                            // Keep Spotify account and Google login pages on the real mobile
+                            // identity; the playback WebView uses a separate desktop identity.
+                            view?.settings?.userAgentString = WebSettings.getDefaultUserAgent(ctx)
                         }
                         override fun onPageFinished(view: WebView?, url: String?) {
                             pageReady.set(true)
